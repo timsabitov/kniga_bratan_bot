@@ -1,11 +1,18 @@
+import logging
 import psycopg2
+
+logger = logging.getLogger(__name__)
 
 class Database:
     def __init__(self, db_url):
         self.db_url = db_url
 
     def get_connection(self):
-        return psycopg2.connect(self.db_url)
+        try:
+            return psycopg2.connect(self.db_url)
+        except Exception as e:
+            logger.error(f"Ошибка подключения к базе данных: {e}")
+            raise
 
     def init_db(self):
         with self.get_connection() as conn:
@@ -20,6 +27,7 @@ class Database:
                         added_by TEXT NOT NULL
                     );
                 """)
+                logger.info("Создана таблица: triggers")
                 cur.execute("""
                     CREATE TABLE IF NOT EXISTS birthdays (
                         id SERIAL PRIMARY KEY,
@@ -29,6 +37,7 @@ class Database:
                         birthday DATE NOT NULL
                     );
                 """)
+                logger.info("Создана таблица: birthdays")
                 cur.execute("""
                     CREATE TABLE IF NOT EXISTS activity (
                         id SERIAL PRIMARY KEY,
@@ -38,4 +47,5 @@ class Database:
                         word_count INTEGER NOT NULL DEFAULT 0
                     );
                 """)
+                logger.info("Создана таблица: activity")
             conn.commit()
